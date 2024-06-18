@@ -70,16 +70,14 @@ if(!empty($_POST['action']) && $_POST['action'] == 'getDsProjekt') {
 if(!empty($_POST['action']) && $_POST['action'] == 'getBeleg') {
 	
 	$strSQL = "SELECT max(beleg) as lastbeleg FROM tblKassa  
-			WHERE periode = :periode AND mandant = :mandant";
-
+		WHERE periode = ? AND mandant = ?";
 	$stmt = $db->prepare($strSQL);
-	$stmt->bindParam(':periode', $periode, PDO::PARAM_INT);
-	$stmt->bindParam(':mandant', $mandant, PDO::PARAM_INT);
+	//$stmt = $this->conn->prepare($sqlQuery);
+	$stmt->bind_param("ii", $periode, $mandant);	
 	$stmt->execute();
-	$result = $stmt->fetch(PDO::FETCH_ASSOC);
-
-	echo $result['lastbeleg'];
-
+	$result = $stmt->get_result();
+	$record = $result->fetch_assoc();
+	echo $record['lastbeleg'];	
 }
 if(!empty($_POST['action']) && $_POST['action'] == 'getChartE') {
 	$record->getChart('eingang', $mandant, $periode);
@@ -134,123 +132,102 @@ if(!empty($_POST['action']) && $_POST['action'] == 'deleteRecord') {
 
 if(!empty($_POST['action']) && $_POST['action'] == 'getPeriode') {
 	
-	$strSQL = "SELECT * FROM tblPeriode WHERE pemandant = :mandant";
+	$strSQL = "SELECT * FROM tblPeriode WHERE pemandant = ".$mandant;
 
 	$stmt = $db->prepare($strSQL);
-	$stmt->bindParam(':mandant', $mandant, PDO::PARAM_INT);
 	$stmt->execute();
-	$result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
+	$result = $stmt->get_result();	
+	
 	foreach($result as $row) {
-		if ($row['status'] == 1 && $strSelected == '' && $periode == 0) {
-			$strSelected = 'selected';
-			$_SESSION['periode'] = $row['peid'];
-		} elseif ($periode == $row['peid'] && $strSelected == '') {
-			$strSelected = 'selected';
-		} else {
-			$strSelected = '';
-		}
-		echo '<option value="'.$row['peid'].'" '.$strSelected.'>'.$row['pebezeichnung'].'</option>';
+			if ($row['status'] == 1 && $strSelected == '' && $periode == 0) {
+				$strSelected = 'selected';
+				$_SESSION['periode'] = $row['peid'];
+			} elseif ($periode == $row['peid'] && $strSelected == '') {
+				$strSelected = 'selected';
+			} else {
+				$strSelected = '';
+			}
+			echo '<option value="'.$row['peid'].'" '.$strSelected.'>'.$row['pebezeichnung'].'</option>';
 	}
 }
 
-
 if(!empty($_POST['action']) && $_POST['action'] == 'getKonto') {
 	
-	$strSQL = "SELECT * FROM tblKonten WHERE kmandant = :mandant AND kperiode = :periode";
+	$strSQL = "SELECT * FROM tblKonten WHERE kmandant = ".$mandant." AND kperiode = ".$periode;
 
 	$stmt = $db->prepare($strSQL);
-	$stmt->bindParam(':mandant', $mandant, PDO::PARAM_INT);
-	$stmt->bindParam(':periode', $periode, PDO::PARAM_INT);
 	$stmt->execute();
-	$result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-	echo '<option value=""></option>';
+	$result = $stmt->get_result();	
+	echo '<option value=""></option>';		
 	foreach($result as $row) {
-		echo '<option value="'.$row['kid'].'">'.$row['kontoname'].'</option>';
+			echo '<option value="'.$row['kid'].'">'.$row['kontoname'].'</option>';
 	}
-
 }
 
 if(!empty($_POST['action']) && $_POST['action'] == 'getKategorie') {
 	
-	$strSQL = "SELECT * FROM tblKategorie WHERE katmandant = :mandant";
+	$strSQL = "SELECT * FROM tblKategorie WHERE katmandant = ".$mandant;
 
 	$stmt = $db->prepare($strSQL);
-	$stmt->bindParam(':mandant', $mandant, PDO::PARAM_INT);
 	$stmt->execute();
-	$result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-	echo '<option value=""></option>';
+	$result = $stmt->get_result();	
+	echo '<option value=""></option>';		
 	foreach($result as $row) {
-		echo '<option value="'.$row['katid'].'" katart="'.$row['katart'].'">'.$row['katbez'].'</option>';
+			echo '<option value="'.$row['katid'].'" katart="'.$row['katart'].'">'.$row['katbez'].'</option>';
 	}
-
 }
 
 if(!empty($_POST['action']) && $_POST['action'] == 'getProjekt') {
 	
-	$strSQL = "SELECT * FROM tblProjekt WHERE pmandant = :mandant";
+	$strSQL = "SELECT * FROM tblProjekt WHERE pmandant = ".$mandant;
 
 	$stmt = $db->prepare($strSQL);
-	$stmt->bindParam(':mandant', $mandant, PDO::PARAM_INT);
 	$stmt->execute();
-	$result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
+	$result = $stmt->get_result();	
 	echo '<option value=""></option>';
 	foreach($result as $row) {
-		echo '<option value="'.$row['pid'].'">'.$row['projektname'].'</option>';
+			echo '<option value="'.$row['pid'].'">'.$row['projektname'].'</option>';
 	}
-
 }
 
 if(!empty($_POST['action']) && $_POST['action'] == 'getStammPeriode') {
 
-	$strSQL = "SELECT pebezeichnung, vondat, bisdat 
-			FROM tblPeriode 
-			WHERE peid = :periode AND pemandant = :mandant";
+		$strSQL =  "SELECT pebezeichnung, vondat, bisdat 
+						FROM tblPeriode 
+						WHERE peid = ? AND pemandant = ?";
 
-	$stmt = $db->prepare($strSQL);
-	$stmt->bindParam(':periode', $periode, PDO::PARAM_INT);
-	$stmt->bindParam(':mandant', $mandant, PDO::PARAM_INT);
-	$stmt->execute();
-	$record = $stmt->fetch(PDO::FETCH_ASSOC);
-
-	header('Content-type: application/json');
-	echo json_encode($record);
-
+		$stmt = $db->prepare($strSQL);
+		$stmt->bind_param("ii", $periode, $mandant);	
+		$stmt->execute();
+		$result = $stmt->get_result();
+		$record = $result->fetch_assoc();
+		header('Content-type: application/json');
+		echo json_encode($record);
 }
 
 if(!empty($_POST['action']) && $_POST['action'] == 'updateStammPeriode') {
-	// $bisdat = '2022-01-01';
-	// $vondat = '2022-12-01';
-	if (empty($_POST["bisdat"]) || $_POST["bisdat"] == null ) {
-		$bisdat = '2022-01-01';
-	} else {
-		$bisdat = $_POST["bisdat"];
-	}
+		// $bisdat = '2022-01-01';
+		// $vondat = '2022-12-01';
+		if (empty($_POST["bisdat"]) || $_POST["bisdat"] == null ) {
+			$bisdat = '2022-01-01';
+		} else {
+			$bisdat = $_POST["bisdat"];
+		}
 
-	if (empty($_POST["vondat"]) || $_POST["vondat"] == null ) {
-		$vondat = '2022-01-01';
-	} else {
-		$vondat = $_POST["vondat"];
-	}
-	$strSQL = "UPDATE tblPeriode SET pebezeichnung = :pebezeichnung, vondat = :vondat, bisdat = :bisdat
-			WHERE peid = :periode AND pemandant = :mandant";
-
-	$stmt = $db->prepare($strSQL);
-	$stmt->bindParam(':pebezeichnung', $_POST["pebezeichnung"], PDO::PARAM_STR);
-	$stmt->bindParam(':vondat', $vondat, PDO::PARAM_STR);
-	$stmt->bindParam(':bisdat', $bisdat, PDO::PARAM_STR);
-	$stmt->bindParam(':periode', $periode, PDO::PARAM_INT);
-	$stmt->bindParam(':mandant', $mandant, PDO::PARAM_INT);
-
-	if($stmt->execute()){ 
-		return true;
-	} else {
-		return false;
-	}
-
+		if (empty($_POST["vondat"]) || $_POST["vondat"] == null ) {
+			$vondat = '2022-01-01';
+		} else {
+			$vondat = $_POST["vondat"];
+		}
+		$strSQL =  "UPDATE tblPeriode SET pebezeichnung = ?, vondat = ?, bisdat = ?
+						WHERE peid = ? AND pemandant = ?";
+			
+		$stmt = $db->prepare($strSQL);
+		$stmt->bind_param("sssii", $_POST["pebezeichnung"], $vondat, $bisdat, $periode, $mandant);
+		
+		if($stmt->execute()){ 
+			return true;
+		}
 }
 
 ?>

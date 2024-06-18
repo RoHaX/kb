@@ -7,7 +7,8 @@ $periode = $_SESSION['periode'];
 $mandant = $_SESSION['mandant'];
 
 function iconv2($text) {
-    return iconv('utf-8', 'cp1252', $text);
+    // return iconv('utf-8', 'cp1252', $text);
+    return mb_convert_encoding($text, 'cp1252', 'utf-8');
 }
 class PDF extends FPDF {
 
@@ -693,14 +694,10 @@ $pdf->ein_kst();
 $pdf->AddPage();
 $pdf->Ln(1);
 
-$sqlQuery =  "SELECT * FROM tblKonten ";
-$sqlQuery .= "WHERE kmandant = ".$mandant." AND kperiode = ".$periode." ";
-$sqlQuery .= "ORDER BY kid ASC ";
-
+$sqlQuery = "SELECT * FROM tblKonten WHERE kmandant = :mandant AND kperiode = :periode ORDER BY kid ASC";
 $stmt = $db->prepare($sqlQuery);
-$stmt->bindParam(':mandant', $mandant);
-$stmt->bindParam(':periode', $periode);
-$stmt->bindParam(':kid', $konto);
+$stmt->bindParam(':mandant', $mandant, PDO::PARAM_INT);
+$stmt->bindParam(':periode', $periode, PDO::PARAM_INT);
 $stmt->execute();
 $result = $stmt->fetchAll();
 
